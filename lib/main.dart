@@ -5,6 +5,10 @@ import 'widgets/pokemon_card.dart';
 import 'services/pokemon_service.dart';
 import 'models/pokemon.dart';
 
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+
+
 void main() {
   runApp(const MyApp());
 }
@@ -28,7 +32,8 @@ class MyHomePage extends StatefulWidget {
   const MyHomePage({super.key});
 
   @override
-  State<MyHomePage> createState() => _MyHomePageState();
+  // ignore: library_private_types_in_public_api
+  _PokemonDetailsPageState createState() => _PokemonDetailsPageState();
 }
 
 class _MyHomePageState extends State<MyHomePage> {
@@ -39,36 +44,3 @@ class _MyHomePageState extends State<MyHomePage> {
     super.initState();
     futurePokemon = PokemonService.fetchPokemon(pokeId);
   }
-
-  void regenerate_pokemon() {
-  setState(() {
-    pokeId = Random().nextInt(1025);
-    futurePokemon = PokemonService.fetchPokemon(pokeId);
-  });
-}
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Pokemon Card'),
-      ),
-      body: Center(
-        child: FutureBuilder<Pokemon>(
-          future: futurePokemon,
-          builder: (context, snapshot) {
-            if (snapshot.hasData) {
-              return GestureDetector(
-                onDoubleTap: () {
-                  regenerate_pokemon();
-                },
-                child: PokemonCard(pokemon: snapshot.data!),
-              );
-            }
-            return const CircularProgressIndicator();
-          },
-        ),
-      ),
-    );
-  }
-}
