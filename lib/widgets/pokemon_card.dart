@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
+import '../models/pokemon.dart';
 
 class PokemonCard extends StatelessWidget {
+  final Pokemon pokemon;
+
+  const PokemonCard({super.key, required this.pokemon});
 
   @override
   Widget build(BuildContext context) {
@@ -17,11 +21,32 @@ class PokemonCard extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
+            Image.network(
+              pokemon.imageUrl,
+              height: 120,
+              width: 120,
+              loadingBuilder: (context, child, loadingProgress) {
+                if (loadingProgress == null) return child;
+                return const CircularProgressIndicator();
+              },
+              errorBuilder: (context, error, stackTrace) {
+                return const Icon(Icons.error);
+              },
+            ),
+            const SizedBox(height: 8),
             Text(
-              "Pikachu",
+              pokemon.name,
               style: const TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Types: ${pokemon.types.join(", ")}',
+              style: const TextStyle(
+                fontSize: 16,
+                color: Colors.black87,
               ),
             ),
           ],
