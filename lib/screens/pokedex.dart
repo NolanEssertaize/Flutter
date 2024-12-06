@@ -102,7 +102,7 @@ class PokemonDetailsPage extends StatefulWidget {
 }
 
 class _PokemonDetailsPageState extends State<PokemonDetailsPage> {
-  late dynamic pokemonData;
+  dynamic pokemonData;
 
   @override
   void initState() {
