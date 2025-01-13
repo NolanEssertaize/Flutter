@@ -10,7 +10,7 @@ class Pokemon {
     required this.types,
     required this.id,
   });
-
+  
   factory Pokemon.fromJson(Map<String, dynamic> json) {
     return Pokemon(
       name: json['name'],

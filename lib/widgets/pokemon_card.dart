@@ -1,52 +1,107 @@
 import 'package:flutter/material.dart';
 import '../models/pokemon.dart';
+import '../utils.dart' as utils;
 
 class PokemonCard extends StatelessWidget {
   final Pokemon pokemon;
+  final bool isRevealed;
+  static List<int> rarityId = utils.pokemonLegendaires;
 
-  const PokemonCard({super.key, required this.pokemon});
+  const PokemonCard({
+    super.key, 
+    required this.pokemon,
+    this.isRevealed = true,
+  });
+
+  bool get isRare => rarityId.contains(pokemon.id);
+
+  Color getTypeColor(String type) {
+    final Map<String, Color> typeColors = utils.typeColors;
+    return typeColors[type.toLowerCase()] ?? Colors.grey;
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      elevation: 4,
+    return AnimatedOpacity(
+      duration: const Duration(milliseconds: 500),
+      opacity: isRevealed ? 1.0 : 0.0,
       child: Container(
-        padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(16),
           gradient: LinearGradient(
-            colors: [Colors.blue.shade100, Colors.blue.shade200],
+            colors: [
+              getTypeColor(pokemon.types.first).withOpacity(0.7),
+              getTypeColor(pokemon.types.first).withOpacity(0.3),
+            ],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
           ),
-          borderRadius: BorderRadius.circular(8),
+          boxShadow: [
+            BoxShadow(
+              color: isRare 
+                ? Colors.amber.withOpacity(0.5)
+                : Colors.black.withOpacity(0.2),
+              blurRadius: 15,
+              spreadRadius: 2,
+            ),
+          ],
+          border: isRare
+            ? Border.all(color: Colors.amber, width: 2)
+            : null,
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Image.network(
-              pokemon.imageUrl,
-              height: 120,
-              width: 120,
-              loadingBuilder: (context, child, loadingProgress) {
-                if (loadingProgress == null) return child;
-                return const CircularProgressIndicator();
-              },
-              errorBuilder: (context, error, stackTrace) {
-                return const Icon(Icons.error);
-              },
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.9),
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.1),
+                    blurRadius: 10,
+                    spreadRadius: 2,
+                  ),
+                ],
+              ),
+              child: Image.network(
+                pokemon.imageUrl,
+                height: 120,
+                width: 120,
+                fit: BoxFit.contain,
+              ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 16),
             Text(
-              pokemon.name,
-              style: const TextStyle(
+              pokemon.name.toUpperCase(),
+              style: TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
+                color: isRare ? Colors.amber[700] : Colors.white,
+                shadows: [
+                  Shadow(
+                    offset: const Offset(1, 1),
+                    blurRadius: 2,
+                    color: Colors.black.withOpacity(0.5),
+                  ),
+                ],
               ),
             ),
             const SizedBox(height: 8),
             Text(
-              'Types: ${pokemon.types.join(", ")}',
-              style: const TextStyle(
-                fontSize: 16,
-                color: Colors.black87,
+              pokemon.types.join(' / '),
+              style: TextStyle(
+                fontSize: 18,
+                color: Colors.white.withOpacity(0.9),
+                fontStyle: FontStyle.italic,
+                shadows: [
+                  Shadow(
+                    offset: const Offset(1, 1),
+                    blurRadius: 2,
+                    color: Colors.black.withOpacity(0.5),
+                  ),
+                ],
               ),
             ),
           ],
