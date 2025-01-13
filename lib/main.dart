@@ -4,6 +4,7 @@ import 'dart:math';
 import 'package:http/http.dart' as http;
 import 'models/pokemon.dart';
 import 'widgets/pokemon_card.dart';
+import 'package:confetti/confetti.dart';
 
 void main() {
   runApp(const MyApp());
@@ -295,14 +296,13 @@ class BoosterOpeningPage extends StatefulWidget {
   
   @override
   State<BoosterOpeningPage> createState() => _BoosterOpeningPageState();
-
-  
 }
 
 class _BoosterOpeningPageState extends State<BoosterOpeningPage> with SingleTickerProviderStateMixin {
   List<Pokemon> boosterPack = [];
   bool isLoading = false;
   late AnimationController _controller;
+  late ConfettiController _confettiController;
 
   @override
   void initState() {
@@ -311,11 +311,13 @@ class _BoosterOpeningPageState extends State<BoosterOpeningPage> with SingleTick
       duration: const Duration(seconds: 1),
       vsync: this,
     );
+    _confettiController = ConfettiController(duration: const Duration(seconds: 3));
   }
 
   @override
   void dispose() {
     _controller.dispose();
+    _confettiController.dispose();
     super.dispose();
   }
 
@@ -365,44 +367,69 @@ class _BoosterOpeningPageState extends State<BoosterOpeningPage> with SingleTick
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Booster Opening')),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Expanded(
-              child: GestureDetector(
-                onTap: isLoading || boosterPack.isNotEmpty ? null : openBoosterPack,
-                child: isLoading
-                    ? const Center(child: CircularProgressIndicator())
-                    : boosterPack.isEmpty
-                        ? Container(
-                            constraints: const BoxConstraints(maxWidth: 300),
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(15),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withOpacity(0.3),
-                                  blurRadius: 15,
-                                  spreadRadius: 5,
+      body: Stack(
+        children: [
+          Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Expanded(
+                  child: GestureDetector(
+                    onTap: isLoading || boosterPack.isNotEmpty ? null : openBoosterPack,
+                    child: isLoading
+                        ? const Center(child: CircularProgressIndicator())
+                        : boosterPack.isEmpty
+                            ? Container(
+                                constraints: const BoxConstraints(maxWidth: 300),
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(15),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withOpacity(0.3),
+                                      blurRadius: 15,
+                                      spreadRadius: 5,
+                                    ),
+                                  ],
                                 ),
-                              ],
-                            ),
-                            child: ClipRRect(
-                              borderRadius: BorderRadius.circular(15),
-                              child: Image.asset(
-                                'images/booster_pack.png',
-                                fit: BoxFit.contain,
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(15),
+                                  child: Image.asset(
+                                    'images/booster_pack.png',
+                                    fit: BoxFit.contain,
+                                  ),
+                                ),
+                              )
+                            : SwipeableCards(
+                                cards: boosterPack,
+                                cardAnimationController: _controller,
+                                onLegendaryRevealed: () {
+                                  _confettiController.play();
+                                },
                               ),
-                            ),
-                          )
-                        : SwipeableCards(
-                            cards: boosterPack,
-                            cardAnimationController: _controller,
-                          ),
-              ),
+                  ),
+                ),
+              ],
             ),
-          ],
-        ),
+          ),
+          Align(
+            alignment: Alignment.center,
+            child: ConfettiWidget(
+              confettiController: _confettiController,
+              blastDirectionality: BlastDirectionality.explosive,
+              particleDrag: 0.05,
+              emissionFrequency: 0.05,
+              numberOfParticles: 50,
+              gravity: 0.1,
+              shouldLoop: false,
+              colors: const [
+                Colors.amber,
+                Colors.yellow,
+                Colors.orange,
+                Colors.red,
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -411,11 +438,13 @@ class _BoosterOpeningPageState extends State<BoosterOpeningPage> with SingleTick
 class SwipeableCards extends StatefulWidget {
   final List<Pokemon> cards;
   final AnimationController cardAnimationController;
+  final VoidCallback? onLegendaryRevealed;
 
   const SwipeableCards({
     Key? key, 
     required this.cards,
     required this.cardAnimationController,
+    this.onLegendaryRevealed,
   }) : super(key: key);
 
   @override
@@ -426,6 +455,14 @@ class _SwipeableCardsState extends State<SwipeableCards> {
   int currentIndex = 0;
   Offset dragPosition = Offset.zero;
   bool isDragging = false;
+
+  @override
+  void initState() {
+    super.initState();
+    if (PokemonCard.rarityId.contains(widget.cards[0].id)) {
+      widget.onLegendaryRevealed?.call();
+    }
+  }
 
   void _onDragUpdate(DragUpdateDetails details) {
     if (currentIndex >= widget.cards.length) return;
@@ -445,6 +482,9 @@ class _SwipeableCardsState extends State<SwipeableCards> {
         if (currentIndex < widget.cards.length) {
           widget.cardAnimationController.reset();
           widget.cardAnimationController.forward();
+          if (PokemonCard.rarityId.contains(widget.cards[currentIndex].id)) {
+            widget.onLegendaryRevealed?.call();
+          }
         }
       });
     }
@@ -481,7 +521,10 @@ class _SwipeableCardsState extends State<SwipeableCards> {
             height: MediaQuery.of(context).size.height * 0.7,
             child: Card(
               elevation: 8,
-              child: PokemonCard(pokemon: widget.cards[currentIndex]),
+              child: PokemonCard(
+                pokemon: widget.cards[currentIndex],
+                onLegendaryRevealed: widget.onLegendaryRevealed,
+              ),
             ),
           ),
         ),

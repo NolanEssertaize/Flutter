@@ -5,12 +5,14 @@ import '../utils.dart' as utils;
 class PokemonCard extends StatelessWidget {
   final Pokemon pokemon;
   final bool isRevealed;
+  final VoidCallback? onLegendaryRevealed; 
   static List<int> rarityId = utils.pokemonLegendaires;
 
   const PokemonCard({
     super.key, 
     required this.pokemon,
     this.isRevealed = true,
+    this.onLegendaryRevealed,
   });
 
   bool get isRare => rarityId.contains(pokemon.id);
